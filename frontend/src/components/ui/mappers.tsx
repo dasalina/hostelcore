@@ -1,6 +1,9 @@
 export const mapEventFromAPI = (apiEvent: any) => {
+  // Parse date as local time to avoid timezone issues
+  const [year, month, day] = apiEvent.date.split('-').map(Number);
+  const eventDate = new Date(year, month - 1, day);
+
   // Format date
-  const eventDate = new Date(apiEvent.date);
   const formattedDate = eventDate.toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
@@ -16,6 +19,10 @@ export const mapEventFromAPI = (apiEvent: any) => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
+  // Create event time in local timezone
+  const [hours, minutes] = (apiEvent.start_time || '00:00').split(':').map(Number);
+  const eventTime = new Date(year, month - 1, day, hours, minutes);
+
   return {
     ...apiEvent,
     title: apiEvent.name,
@@ -29,6 +36,6 @@ export const mapEventFromAPI = (apiEvent: any) => {
       humidity: apiEvent.weather.humidity,
       windSpeed: apiEvent.weather.wind_mph,
     } : null,
-    time: new Date(apiEvent.date + 'T' + (apiEvent.start_time || '00:00')),
+    time: eventTime,
   };
 };

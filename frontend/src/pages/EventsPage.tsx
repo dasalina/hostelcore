@@ -1,21 +1,17 @@
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Calendar, Clock, MapPin, Cloud, Droplets, Wind, ExternalLink } from 'lucide-react';
-
+import { useState } from 'react';
 import { EventDetails } from '@/components/EventDetailCard';
+import { DateTimeline } from '@/components/DateTimeline';
 import { LocationSearch } from '@/components/LocationSearch';
 import { Timeline } from '@/components/Timeline';
 import { WeatherCard } from '@/components/WeatherCard';
 import { QRCodeCard } from '@/components/QRCodeCard';
-
 import { mapEventFromAPI } from '@/components/ui/mappers';
 
-
-function App() {
+function EventsPage() {
   const [location, setLocation] = useState('');
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [qrCode, setQrCode] = useState(null);
   const [formData, setFormData] = useState({
     street_address: '',
@@ -27,7 +23,30 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const findNearbyEvents = async (data?: typeof formData) => {
+  const generateDates = () => {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push(date);
+    }
+    return dates;
+  };
+
+  const dates = generateDates();
+
+  const filteredEvents = events.filter((event) => {
+    if (!event.time) return false;
+    const eventDate = new Date(event.time);
+    return (
+      eventDate.getFullYear() === selectedDate.getFullYear() &&
+      eventDate.getMonth() === selectedDate.getMonth() &&
+      eventDate.getDate() === selectedDate.getDate()
+    );
+  });
+
+  const findNearbyEvents = async (data) => {
     const payload = data || formData;
     setLoading(true);
     setError('');
@@ -46,13 +65,12 @@ function App() {
 
       console.log('Raw API response:', responseData);
 
-      // Map API events using the mapper
       const mappedEvents = (responseData.events || []).map(mapEventFromAPI);
 
       console.log('Mapped events:', mappedEvents);
 
       setEvents(mappedEvents);
-    } catch (err: any) {
+    } catch (err) {
       setError(`Failed to fetch events: ${err.message}`);
     } finally {
       setLoading(false);
@@ -60,7 +78,6 @@ function App() {
   };
 
   const fetchEventDetails = async (eventId) => {
-    // Don't clear QR while fetching
     try {
       const origin = `${formData.street_address}, ${formData.city}, ${formData.state} ${formData.zip_code}`;
       const response = await fetch(
@@ -83,80 +100,80 @@ function App() {
       }
     } catch (err) {
       console.error('Failed to fetch QR:', err);
-      // Don't clear QR on error, keep previous one
     }
   };
 
   return (
-    <div className="p-5 max-w-7xl mx-auto flex gap-8">
-      <div className="flex-1">
-        {/* Location search */}
-        <LocationSearch
-          location={location}
-          onLocationChange={setLocation}
-          radius={formData.radius_miles}
-          onSearch={(parsedData) => {
-            setFormData(parsedData);
-            findNearbyEvents(parsedData);
-          }}
-        />
+    <div className="flex h-full w-full">
+      {/* Left sidebar - Date Timeline */}
+      <DateTimeline
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        dates={dates}
+      />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col items-center justify-start pt-8 px-8 overflow-y-auto">
+        <div className="w-full max-w-2xl">
+          {/* Location search */}
+          <LocationSearch
+            location={location}
+            onLocationChange={setLocation}
+            radius={formData.radius_miles}
+            onSearch={(parsedData) => {
+              setFormData(parsedData);
+              findNearbyEvents(parsedData);
+            }}
+          />
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mt-4">
+              {error}
+            </div>
+          )}
+        </div>
 
         {/* Selected Event Details */}
         {selectedEvent && (
-          <div className="flex-1 p-8 overflow-y-auto flex justify-center">
-            <div className="max-w-2xl w-full">
-              {console.log('Selected event:', selectedEvent)}
-              <EventDetails event={selectedEvent} />
+          <div className="mt-8 w-full max-w-2xl space-y-4">
+            <EventDetails event={selectedEvent} />
 
-                {/* Weather and QR side by side */}
-                <div className="flex gap-6 mt-6 items-stretch">
-                  {selectedEvent.weather && (
-                    <div className="flex-1">
-                      <WeatherCard weather={selectedEvent.weather} />
-                    </div>
-                  )}
+            {/* Weather and QR side by side */}
+            <div className="grid grid-cols-2 gap-4">
+              {selectedEvent.weather && (
+                <WeatherCard weather={selectedEvent.weather} />
+              )}
 
-                  {qrCode && (
-                    <div className="flex-1">
-                      <QRCodeCard qrSvg={qrCode} />
-                    </div>
-                  )}
-                </div>
-              </div>
+              {qrCode && (
+                <QRCodeCard qrSvg={qrCode} />
+              )}
             </div>
+          </div>
         )}
       </div>
 
-      {/* Timeline on the right */}
+      {/* Right sidebar - Timeline */}
       <div className="w-96 h-screen sticky top-0">
-        {events.length > 0 && (
-          <Timeline
-            events={events.map(ev => ({
-              id: ev.id,
-              title: ev.title || ev.name || 'Unnamed Event',
-              time: ev.time,
-              distance: ev.distance_miles ? `${ev.distance_miles} miles` : 'Distance unknown'
-            }))}
-            selectedEventId={selectedEvent?.id || ''}
-            onEventSelect={(eventId) => {
-              const ev = events.find(e => e.id === eventId);
-              console.log('Setting selected event:', ev);
-              if (ev) {
-                setSelectedEvent(ev);
-                fetchEventDetails(eventId);
-              }
-            }}
-          />
-        )}
+        <Timeline
+          events={filteredEvents.map(ev => ({
+            id: ev.id,
+            title: ev.title || ev.name || 'Unnamed Event',
+            time: ev.time,
+            distance: ev.distance_miles ? `${ev.distance_miles} miles` : 'Distance unknown'
+          }))}
+          selectedEventId={selectedEvent?.id || ''}
+          onEventSelect={(eventId) => {
+            const ev = events.find(e => e.id === eventId);
+            console.log('Setting selected event:', ev);
+            if (ev) {
+              setSelectedEvent(ev);
+              fetchEventDetails(eventId);
+            }
+          }}
+        />
       </div>
     </div>
   );
 }
 
-export default App;
+export default EventsPage;
