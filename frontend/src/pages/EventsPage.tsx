@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EventDetails } from '@/components/EventDetailCard';
 import { DateTimeline } from '@/components/DateTimeline';
 import { LocationSearch } from '@/components/LocationSearch';
@@ -23,6 +23,9 @@ function EventsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const [userCoords, setUserCoords] = useState<{lat: number, lon: number} | null>(null);
+
+
   const generateDates = () => {
     const dates = [];
     const today = new Date();
@@ -45,6 +48,63 @@ function EventsPage() {
       eventDate.getDate() === selectedDate.getDate()
     );
   });
+
+    useEffect(() => {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setUserCoords({ lat: latitude, lon: longitude });
+
+            // Optional: Reverse geocode to get address
+            reverseGeocode(latitude, longitude);
+          },
+          (error) => {
+            console.error("Location access denied:", error);
+            // User denied location, continue without it
+          }
+        );
+      }
+    }, []);
+
+    const reverseGeocode = async (lat: number, lon: number) => {
+      try {
+        // Use Nominatim API for reverse geocoding
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        );
+        const data = await response.json();
+
+        if (data.address) {
+          const addr = data.address;
+
+          // Get proper 2-letter state code
+          const stateCode = addr.state_code || addr['ISO3166-2-lvl4']?.split('-')[1] || '';
+
+          // Build address string
+          const addressParts = [
+            addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : addr.road,
+            addr.city || addr.town || addr.village,
+            stateCode,  // Use state code only
+            addr.postcode
+          ].filter(Boolean);
+
+          const addressString = addressParts.join(', ');
+          setLocation(addressString);
+
+          // Auto-populate the form
+          setFormData({
+            street_address: addr.house_number && addr.road ? `${addr.house_number} ${addr.road}` : addr.road || '',
+            city: addr.city || addr.town || addr.village || '',
+            state: stateCode,  // Use 2-letter code
+            zip_code: addr.postcode || '',
+            radius_miles: 10
+          });
+        }
+      } catch (error) {
+        console.error("Reverse geocoding failed:", error);
+      }
+    };
 
   const findNearbyEvents = async (data) => {
     const payload = data || formData;
@@ -170,6 +230,7 @@ function EventsPage() {
               fetchEventDetails(eventId);
             }
           }}
+          selectedDate={selectedDate}  // ← Add this prop
         />
       </div>
     </div>

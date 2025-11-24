@@ -12,9 +12,10 @@ interface TimelineProps {
   events: Event[];
   selectedEventId: string;
   onEventSelect: (eventId: string) => void;
+  selectedDate: Date;
 }
 
-export function Timeline({ events, selectedEventId, onEventSelect }: TimelineProps) {
+export function Timeline({ events, selectedEventId, onEventSelect, selectedDate }: TimelineProps) {
   const [currentTimePosition, setCurrentTimePosition] = useState(0);
 
   const getPositionFromTime = (date: Date) => {
@@ -40,11 +41,13 @@ export function Timeline({ events, selectedEventId, onEventSelect }: TimelinePro
 
   return (
     <div className="h-screen overflow-y-auto border-l border-gray-200 flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
-        <h2 className="font-bold">Today's Events</h2>
+      {/* Header*/}
+      <div className="sticky top-0 z-30 p-4 border-b border-gray-200 bg-white shadow-sm">
+        <h2 className="font-bold">
+          {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+        </h2>
         <p className="text-sm text-gray-500">
-          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+          {events.length} {events.length === 1 ? 'event' : 'events'}
         </p>
       </div>
 

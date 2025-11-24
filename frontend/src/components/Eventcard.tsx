@@ -88,7 +88,7 @@ export function EventCard({ event, onEdit, onDelete, onUpdateWeather, isUpdating
           variant="outline"
           size="sm"
           onClick={() => onEdit(event)}
-          className="flex-1"
+          className="flex-1 !text-white"
         >
           <Edit className="h-4 w-4 mr-1" />
           Edit
@@ -98,7 +98,7 @@ export function EventCard({ event, onEdit, onDelete, onUpdateWeather, isUpdating
           size="sm"
           onClick={() => onUpdateWeather(event.id)}
           disabled={isUpdatingWeather || hasPassed}
-          className="flex-1"
+          className="flex-1 !text-white"
           title={hasPassed ? "Cannot update weather for past events" : "Update weather forecast"}
         >
           {isUpdatingWeather ? (

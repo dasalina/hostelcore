@@ -234,9 +234,8 @@ export function HostPanelPage() {
 
       if (!response.ok) throw new Error("Failed to delete event");
 
+      setEvents(prevEvents => prevEvents.filter(e => e.id !== deleteEventId));
       const result = await response.json();
-
-      setEvents(events.filter(e => e.id !== deleteEventId));
       toast.success(result.message || "Event deleted successfully");
       setDeleteEventId(null);
     } catch (error) {
@@ -420,7 +419,7 @@ export function HostPanelPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="!text-white">Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleDeleteEvent} className="bg-red-600 hover:bg-red-700">
                 Delete
               </AlertDialogAction>

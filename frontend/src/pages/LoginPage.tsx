@@ -48,7 +48,6 @@ export function LoginPage() {
     try {
       const googleToken = response.credential;
 
-      // Send token to your Django backend
       const res = await fetch('http://127.0.0.1:8000/api/auth/google/', {
         method: 'POST',
         headers: {

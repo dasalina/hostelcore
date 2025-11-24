@@ -153,7 +153,7 @@ export function EventForm({ formData, setFormData, onSubmit, submitText }: Event
                 }}
                 minDate={dayjs()}
                 slots={{
-                  openPickerIcon: () => null  // Remove the calendar icon
+                  openPickerIcon: () => null
                 }}
                 slotProps={{
                   textField: {
@@ -220,7 +220,7 @@ export function EventForm({ formData, setFormData, onSubmit, submitText }: Event
         <div className="space-y-2">
           <Label htmlFor="state">State *</Label>
           <Select value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })}>
-            <SelectTrigger className="text-white">
+            <SelectTrigger className="!text-white">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
