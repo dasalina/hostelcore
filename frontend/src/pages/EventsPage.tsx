@@ -7,6 +7,8 @@ import { WeatherCard } from '@/components/WeatherCard';
 import { QRCodeCard } from '@/components/QRCodeCard';
 import { mapEventFromAPI } from '@/components/ui/mappers';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 function EventsPage() {
   const [location, setLocation] = useState('');
   const [events, setEvents] = useState([]);
@@ -41,7 +43,11 @@ function EventsPage() {
 
   const filteredEvents = events.filter((event) => {
     if (!event.time) return false;
-    const eventDate = new Date(event.time);
+
+    // Parse date without timezone conversion
+    //const [year, month, day] = event.time.split('T')[0].split('-').map(Number);
+    const eventDate = event.time;
+
     return (
       eventDate.getFullYear() === selectedDate.getFullYear() &&
       eventDate.getMonth() === selectedDate.getMonth() &&
@@ -113,7 +119,7 @@ function EventsPage() {
 
     try {
       const response = await fetch(
-        'http://127.0.0.1:8000/api/eventboard/find_nearby/',
+        `${API_URL}/api/eventboard/find_nearby/`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -141,7 +147,7 @@ function EventsPage() {
     try {
       const origin = `${formData.street_address}, ${formData.city}, ${formData.state} ${formData.zip_code}`;
       const response = await fetch(
-        `http://127.0.0.1:8000/api/eventpanel/${eventId}/?origin=${encodeURIComponent(origin)}&travelmode=driving`
+        `${API_URL}/api/eventpanel/${eventId}/?origin=${encodeURIComponent(origin)}&travelmode=driving`
       );
 
       if (!response.ok) {
@@ -230,7 +236,7 @@ function EventsPage() {
               fetchEventDetails(eventId);
             }
           }}
-          selectedDate={selectedDate}  // ← Add this prop
+          selectedDate={selectedDate}
         />
       </div>
     </div>

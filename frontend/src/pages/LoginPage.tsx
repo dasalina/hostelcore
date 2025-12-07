@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export function LoginPage() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -48,7 +50,7 @@ export function LoginPage() {
     try {
       const googleToken = response.credential;
 
-      const res = await fetch('http://127.0.0.1:8000/api/auth/google/', {
+      const res = await fetch(`${API_URL}/api/auth/google/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

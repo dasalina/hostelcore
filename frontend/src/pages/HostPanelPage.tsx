@@ -278,10 +278,13 @@ export function HostPanelPage() {
 
   const openEditDialog = (event: Event) => {
     setEditingEvent(event);
+    // Parse date without timezone conversion
+    const [year, month, day] = event.date.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
     setFormData({
       name: event.name,
       description: event.description,
-      date: new Date(event.date),
+      date: localDate,
       start_time: event.start_time,
       end_time: event.end_time,
       street_address: event.street_address,

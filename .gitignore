@@ -1,4 +1,4 @@
-.env
+docker.env
 
 # Logs
 logs

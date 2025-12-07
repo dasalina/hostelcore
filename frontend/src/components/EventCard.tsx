@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit, Trash2, Cloud, Clock, MapPin, Link as LinkIcon, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
+
 
 interface Event {
   id: string;
@@ -33,16 +34,17 @@ interface EventCardProps {
 
 export function EventCard({ event, onEdit, onDelete, onUpdateWeather, isUpdatingWeather }: EventCardProps) {
   // Check if event has passed
-  const eventDate = new Date(event.date);
-  const now = new Date();
-  const hasPassed = eventDate < now;
+// Compare dates as strings (YYYY-MM-DD format)
+const today = new Date();
+const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+const hasPassed = event.date < todayString; // String comparison works for YYYY-MM-DD
 
   return (
     <Card className="flex flex-col">
       <CardHeader>
         <CardTitle>{event.name}</CardTitle>
         <CardDescription>
-          {format(new Date(event.date), "EEEE, MMMM d, yyyy")}
+          {format(parseISO(event.date), "EEEE, MMMM d, yyyy")}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 space-y-3">

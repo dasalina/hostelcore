@@ -149,7 +149,17 @@ export function EventForm({ formData, setFormData, onSubmit, submitText }: Event
               <DatePicker
                 value={formData.date ? dayjs(formData.date) : null}
                 onChange={(newValue) => {
-                  setFormData({ ...formData, date: newValue ? newValue.toDate() : undefined });
+                  if (newValue) {
+                    // Create date in local timezone without time component
+                    const localDate = new Date(
+                      newValue.year(),
+                      newValue.month(),
+                      newValue.date()
+                    );
+                    setFormData({ ...formData, date: localDate });
+                  } else {
+                    setFormData({ ...formData, date: undefined });
+                  }
                 }}
                 minDate={dayjs()}
                 slots={{
